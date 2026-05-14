@@ -1,103 +1,400 @@
-**✅ Foundation Complete**  
-Here is your **solid, production-ready foundation document**.  
+# Foundation: Smart Home Architecture & Design
 
-Copy the entire content below into your new GitHub repo as **`README.md`** (or create `docs/FOUNDATION-SETUP.md` and link it).  
+**Version 1.0.0 | March 2026**
 
-This document is self-contained, solo-optimized for **free default GitHub Codespaces** (2-core/8 GB/32 GB default machine, 120 core-hours + 15 GB storage/month), and will serve as the single source of truth for every future step.
+This document describes the architectural decisions, constraints, and rationale for SmartHome_JustClick.
 
 ---
 
-```markdown
-# Smart-Home Skill Engine • Foundation Setup v1.0  
-**Solo Developer Edition – Free GitHub Codespaces (March 2026)**
+## Vision
 
-### Project Vision
-A single private Git repo where:
-- Automation skills live (instruction-only Markdown + executable Python tools)
-- Existing hardware (Nest, Ring, Hue, Yale, Aqara, etc.) is controlled
-- New modular hardware prototypes (ESP32, Raspberry Pi) are defined
-- One team (you for now) can work on logic while hardware evolves
+A unified smart home platform that:
+- Controls existing commercial devices (Nest, Ring, Hue, Yale, Aqara)
+- Supports modular hardware prototypes (ESP32, Raspberry Pi)
+- Runs entirely locally (automations, logic)
+- Uses cloud APIs only for device communication (when unavoidable)
+- Evolves from solo development to team collaboration without architectural changes
 
-Everything stays connected via Home Assistant as the hardware bus + OpenClaw as the AI skill brain.
+---
 
-### Core Architecture (Simple & Lightweight)
+## Core Principles
+
+### 1. Local-First Automations
+All automation logic executes locally, ensuring continued operation during internet outages.
+
 ```
-HA Container ── MQTT ── OpenClaw Skill Engine
-      │
-      └─ ESPHome (your prototypes)
-      └─ Local LLM (llama.cpp or Ollama-light)
-```
-
-### Free-Tier Optimized Tech Stack
-| Component           | Choice                          | Why (Free-Tier Safe)          | Approx. Resource Use |
-|---------------------|---------------------------------|-------------------------------|----------------------|
-| Container Runtime   | Docker + docker-compose         | Built-in in Codespaces        | ~3–4 GB disk         |
-| Home Assistant      | Official HA Container           | Native support for every device in your 7 MD files | 1.5 GB RAM peak     |
-| OpenClaw Skills     | Official OpenClaw image or Python wrapper | Executable skills + your Markdown | <500 MB             |
-| Hardware Definition | ESPHome (YAML)                  | Compiles fast on 2-core       | <300 MB             |
-| LLM                 | llama.cpp server (tiny 1B model) | Runs locally inside container | 800 MB model        |
-| Editor              | VS Code in Codespaces           | Zero local install            | —                   |
-
-**Total expected footprint in free Codespaces**: ~6–8 GB disk, <4 GB RAM peak. Fits comfortably inside default machine.
-
-### Free-Tier Usage Rules (Critical for Solo)
-- Always **stop** the codespace when done (Settings → Stop Codespace).
-- Never leave it running overnight.
-- Use smallest machine possible (default 2-core).
-- Delete unused codespaces monthly.
-- Monitor usage at https://github.com/settings/billing → Codespaces section.
-- Set Spending Limit to $0 in Billing settings.
-
-### Repository Structure (Create Exactly This)
-```
-smart-home-skill-engine/
-├── .devcontainer/              # (optional but recommended)
-│   └── devcontainer.json
-├── docker-compose.yml
-├── homeassistant/
-│   ├── configuration.yaml
-│   └── blueprints/             # Reusable automations (your skills)
-├── openclaw-skills/
-│   ├── smart-home-core/        # ← Your 7 MD files go here
-│   │   ├── SKILL.md
-│   │   ├── tools.py            # Executable version (we build next)
-│   │   └── claw.json
-│   └── templates/              # Ready for team to copy
-├── esphome/
-│   └── prototypes/             # Your ESP32 YAMLs
-├── docs/
-│   ├── FOUNDATION-SETUP.md     # ← This file
-│   └── CLAWHUB-REFERENCE.md    # Paste of original 7 MD files
-├── scripts/
-│   └── start-dev.sh
-├── .gitignore
-├── LICENSE (MIT)
-└── README.md
+Device Events (local) → Home Assistant (local) → Automations (local) → Commands (local/cloud)
 ```
 
-### One-Time Setup (15–25 minutes in Free Codespace)
+### 2. Minimal Cloud Dependency
+Devices may communicate through cloud APIs, but control logic never depends on cloud services.
 
-1. **Create the repo**
-   - Go to GitHub → New repository → `smart-home-skill-engine` → Private → Add README → Create
+| Layer | Location | Fallback |
+|-------|----------|----------|
+| Devices | Home network (WiFi/Zigbee/Z-Wave) | Cloud APIs |
+| Automations | Local HA instance | YAML-based fallback |
+| Storage | Local database | File-based config |
 
-2. **Open in Codespaces**
-   - Click Code → Codespaces → Create codespace on main (use default machine)
+### 3. Protocol Flexibility
+Use the best protocol for each device's use case:
 
-3. **Run these commands inside the terminal** (copy-paste one block at a time)
+| Protocol | Use Case | Range | Mesh | Power |
+|----------|----------|-------|------|-------|
+| Matter | Future-proof new devices | Good | Yes | Varies |
+| Zigbee | Sensors, buttons, lights | Good | Yes | Battery-friendly |
+| Z-Wave | Switches, locks, critical devices | Better | Yes | Efficient |
+| WiFi | Cameras, heavy bandwidth | Good | No | Power-hungry |
+| Local ESPHome | Prototypes, custom hardware | Local | No | Configurable |
 
-```bash
-# Update & install basics
-sudo apt update && sudo apt install -y git curl docker.io docker-compose
+---
 
-# Create folder structure
-mkdir -p homeassistant/blueprints openclaw-skills/smart-home-core esphome/prototypes docs scripts .devcontainer
+## Architecture
 
-# Create docker-compose.yml (lightweight version)
-cat > docker-compose.yml << 'EOF'
-version: '3.8'
-services:
-  homeassistant:
-    image: ghcr.io/home-assistant/home-assistant:stable
+### System Layers
+
+```
+┌───────────────────────────────────────────────────────┐
+│ User Interface Layer                                  │
+│ • Home Assistant Dashboard (http://localhost:8123)    │
+│ • Mobile app (via cloud relay or local access)       │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│ Automation & Logic Layer                             │
+│ • YAML automations (condition-based)                │
+│ • Python scripts (complex logic)                    │
+│ • Blueprints (reusable patterns)                    │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│ Device Integration Layer                             │
+│ • Home Assistant native integrations                │
+│ • MQTT for local bridging                           │
+│ • Cloud API connectors                              │
+│ • Local protocol adapters (Zigbee, Z-Wave)          │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│ Hardware & Device Layer                              │
+│ • Commercial devices (Nest, Ring, Hue, etc.)        │
+│ • Modular prototypes (ESP32, Raspberry Pi)          │
+│ • Protocol hubs (Zigbee, Z-Wave, Matter)            │
+└───────────────────────────────────────────────────────┘
+```
+
+### Deployment Architecture
+
+**Development (Codespaces):**
+```
+GitHub Codespaces (Cloud)
+├── Home Assistant Container
+├── ESPHome Compiler
+└── Automation Environment
+     ↓ accesses via Cloud APIs ↓
+Home Devices (local network)
+```
+
+**Production (Recommended):**
+```
+Raspberry Pi (Home Network)
+├── Home Assistant (native or container)
+├── Zigbee/Z-Wave Hub (optional add-on)
+├── Local SSH access
+└── Auto-synced from GitHub
+```
+
+---
+
+## Technology Stack
+
+### Core Components
+
+| Component | Choice | Rationale | Resource Use |
+|-----------|--------|-----------|--------------|
+| Orchestration | Docker Compose | Works in Codespaces, production-ready | — |
+| Automation Hub | Home Assistant | Largest device support, active community | 1.5 GB RAM |
+| Hardware Compiler | ESPHome | Quick iteration, local compilation | 250 MB |
+| Database | SQLite (HA default) | Zero-config, embedded | 50-200 MB |
+| UI | Home Assistant Web | Beautiful, no extra install | Included |
+
+### Optional Add-ons
+
+| Component | Purpose | When To Add |
+|-----------|---------|------------|
+| MQTT Broker | Local device bridging | When using local protocols |
+| llama.cpp | Local LLM for AI commands | Phase 2+ only |
+| OpenClaw | AI skill orchestration | Phase 3+ only |
+| MariaDB | Advanced analytics | Later, if needed |
+
+---
+
+## File Organization
+
+### Purpose of Each Directory
+
+```
+homeassistant/
+├── configuration.yaml      # Main settings, integrations
+├── automations.yaml        # Trigger-based rules
+├── scripts.yaml            # Helper functions
+├── scenes.yaml             # Preset state combinations
+├── blueprints/             # Reusable automation templates
+└── .storage/               # ✗ NEVER COMMIT (auth, cache)
+
+esphome/
+└── prototypes/             # Your ESP32/ESP8266 configs
+
+openclaw-skills/
+└── smart-home-core/        # AI skill definitions (future)
+
+docs/
+├── ARCHITECTURE.md         # This section expanded
+├── DEVICE-SETUP.md         # Per-device guides
+├── TROUBLESHOOTING.md      # Common issues
+└── CLAWHUB-REFERENCE.md    # Original 7 markdown files
+
+scripts/
+├── start-dev.sh            # Standard startup
+├── recover.sh              # Emergency recovery
+└── docker-diagnostic.sh    # System diagnostics
+```
+
+### What Gets Committed to Git
+
+✅ **Always commit:**
+- `homeassistant/configuration.yaml` (sanitized)
+- `homeassistant/automations.yaml`
+- `homeassistant/blueprints/*`
+- `esphome/prototypes/*.yaml`
+- `docs/*.md`
+- `.devcontainer/devcontainer.json`
+- `docker-compose.yml`
+
+❌ **Never commit:**
+- `.storage/` (auth tokens, temp cache)
+- `.cloud/` (cloud account data)
+- `*.db` files (database)
+- `.env` or `secrets.yaml`
+- Logs, temporary files
+
+---
+
+## Device Integration Patterns
+
+### Pattern 1: Cloud API Integration (Easiest)
+
+```yaml
+# homeassistant/configuration.yaml
+google_home:
+  expose_by_default: false
+
+nest:
+  client_id: !secret nest_client_id
+  client_secret: !secret nest_client_secret
+```
+
+**Pros:** Simple, minimal local equipment  
+**Cons:** Depends on cloud service, Internet required
+
+### Pattern 2: Local Protocol via Hub (Recommended)
+
+Device → [Zigbee/Z-Wave Hub] → Home Assistant (local)
+
+```yaml
+# homeassistant/configuration.yaml
+zha:  # Zigbee Home Automation
+  device_path: /dev/ttyUSB0
+  database_path: /config/zha.db
+```
+
+**Pros:** Fast, reliable, works offline  
+**Cons:** Requires hub hardware
+
+### Pattern 3: MQTT Bridge (Most Flexible)
+
+Device → [MQTT Broker] ← → Home Assistant
+
+```yaml
+# homeassistant/configuration.yaml
+mqtt:
+  broker: localhost
+  port: 1883
+  username: ha_user
+  password: !secret mqtt_password
+```
+
+**Pros:** Decoupled, scalable, private  
+**Cons:** Extra infrastructure
+
+### Pattern 4: Local WiFi (ESPHome Only)
+
+ESP32 → WiFi → Home Assistant
+
+```yaml
+# esphome/prototypes/sensor.yaml
+esphome:
+  name: living_room_sensor
+
+esp32:
+  board: esp32dev
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+```
+
+**Pros:** Flexible, low cost  
+**Cons:** Custom development needed
+
+---
+
+## Scaling Strategy
+
+### Phase 1: Foundation (You Are Here)
+- Single Home Assistant instance
+- Cloud API integrations for existing devices
+- Basic YAML automations
+- Git-based version control
+
+### Phase 2: Local Hardware
+- Raspberry Pi running Home Assistant (persistent)
+- Zigbee/Z-Wave hub for local control
+- MQTT broker for bridging
+- Automated Git sync
+
+### Phase 3: Advanced Automation
+- Python-based complex logic
+- Custom ESPHome hardware prototypes
+- Integration with OpenClaw for AI commands
+
+### Phase 4: Team Collaboration
+- Multiple contributors to same repo
+- Separate branches for automations
+- Shared blueprint library
+- Documented device integrations
+
+---
+
+## Cost Analysis
+
+### GitHub Codespaces (Development)
+- **Free tier:** 60 hours/month, 15 GB storage
+- **Cost with spending limit:** $0 (stop containers when done)
+- **Suitable for:** Part-time development, prototyping
+
+### Raspberry Pi 5 (Production)
+- **One-time cost:** $60-80 USD
+- **Annual cost:** $0 (power usage negligible)
+- **Suitable for:** 24/7 home automation
+
+### Cloud APIs (Devices)
+- **Most devices:** Free (included with purchase)
+- **Premium analytics:** $5-20/month per service
+- **DIY alternative:** Run MQTT broker + local protocols
+
+---
+
+## Security Considerations
+
+### Authentication
+- Home Assistant: Self-hosted, no central credentials needed
+- Devices: Use manufacturer authentication (OAuth, API keys)
+- Storage: Credentials in `secrets.yaml`, never committed to Git
+
+### Network Isolation
+When running on home network:
+1. Create separate IoT VLAN for devices
+2. Configure firewall rules (IoT → WAN allowed, IoT → LAN blocked)
+3. Access HA via VPN if remote
+
+### Data Privacy
+- All automation logs stored locally
+- Database is SQLite, on your device
+- No telemetry sent to Home Assistant project
+- Optional: Air-gap (no internet) for critical systems
+
+---
+
+## Future Roadmap
+
+| Milestone | Timeline | Features |
+|-----------|----------|----------|
+| **v1.0** | Now | Basic device control + automations |
+| **v1.1** | Q2 2026 | Local Zigbee hub support |
+| **v2.0** | Q3 2026 | AI skills (OpenClaw + Ollama/llama.cpp) |
+| **v2.1** | Q4 2026 | Multi-user support + team workflows |
+| **v3.0** | 2027 | Full Matter protocol support |
+
+---
+
+## Phase 3: AI Integration (Future)
+
+When you're ready (1-3 months from now), you'll add an optional AI layer:
+
+```
+User: "Turn on bedroom and set temperature to 72"
+  ↓
+Ollama/llama.cpp (natural language → intent)
+  ↓
+OpenClaw (intent → Home Assistant services)
+  ↓
+Home Assistant (service execution)
+  ↓
+Your Devices (respond to commands)
+```
+
+**Why separate from current setup?**
+- Don't need AI to start - basic automations are powerful
+- Each component independently upgradeable
+- Can add locally on Raspberry Pi later
+- Zero cost (all open-source)
+
+**See:** [docs/OPENCLAWINTEGRATION.md](../docs/OPENCLAWINTEGRATION.md) for complete AI setup guide (read later)
+
+---
+
+## Architecture Decision Records (ADRs)
+
+### ADR-001: Docker-First Development
+**Decision:** Use Docker Compose for local development  
+**Rationale:** Works identically in Codespaces, laptop, Raspberry Pi  
+**Trade-off:** Slightly higher learning curve vs. native installation
+
+### ADR-002: Home Assistant as Orchestrator
+**Decision:** Home Assistant as single source of truth  
+**Rationale:** Largest device support, active development, proven in production  
+**Trade-off:** Vendor lock-in (mitigated by open-source)
+
+### ADR-003: YAML-First Automations
+**Decision:** Prioritize YAML over UI automations  
+**Rationale:** Version control, reproducible, infrastructure-as-code  
+**Trade-off:** Steeper learning curve for non-technical users
+
+### ADR-004: Cloud APIs When Necessary
+**Decision:** Use cloud APIs for device communication  
+**Rationale:** Simplicity, no local hub hardware required initially  
+**Trade-off:** Internet dependency, privacy concerns (mitigated by transition plan)
+
+---
+
+## References
+
+- **Home Assistant Documentation:** https://www.home-assistant.io/docs/
+- **ESPHome Documentation:** https://esphome.io/
+- **Docker Compose Documentation:** https://docs.docker.com/compose/
+- **GitHub Codespaces Guide:** https://docs.github.com/en/codespaces
+- **Smart Home Best Practices:** https://community.home-assistant.io/
+
+---
+
+## Questions or Feedback?
+
+See [README.md](README.md) for support resources.
+
+---
+
+**Last updated:** March 2026  
+**Maintainer:** SmartHome_JustClick contributors
     volumes:
       - ./homeassistant:/config
     ports:
@@ -208,9 +505,7 @@ Homepage field → link to this GitHub repo
 Future-Proof Bonus
 When you have a real team, each person can publish their own skill from the same repo (different folders).
 Later you can also submit a PR to the official openclaw/skills GitHub repo for even more visibility.
-This means whatever we build here can instantly become a ClawHub skill — exactly like the original one you started with, but now powerful and executable
-**This README is now your single source of truth.**  
-Every future instruction I give you will reference sections in this document.
+This means whatever we build here can instantly sbecome a ClawHub skill — exactly like the original one you started with, but now powerful and executable
 
 **You are ready.**  
 

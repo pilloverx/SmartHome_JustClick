@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    volumes:
+      - ./homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "8123:8123"
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - smarthome-network
+
+  # OpenClaw is optional - comment out if not needed
+  # openclaw:
+  #   image: ghcr.io/openclaw/openclaw:latest
+  #   container_name: openclaw
+  #   volumes:
+  #     - ./openclaw-skills:/skills
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     homeassistant:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   networks:
+  #     - smarthome-network
+
+  esphome:
+    image: esphome/esphome:latest
+    container_name: esphome
+    volumes:
+      - ./esphome:/config
+    ports:
+      - "6052:6052"
+    restart: unless-stopped
+    environment:
+      - ESPHOME_DASHBOARD_USE_PING=true
+    networks:
+      - smarthome-network
+
+networks:
+  smarthome-network:
+    driver: bridge

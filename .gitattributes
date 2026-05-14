@@ -1,0 +1,36 @@
+# Git attributes for consistency across platforms
+
+# Auto line ending conversion
+* text=auto
+
+# YAML files
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Markdown files
+*.md text eol=lf
+README.md text eol=lf
+foundation.md text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+
+# JSON files (no line ending conversion for Docker)
+*.json text eol=lf
+
+# Python files
+*.py text eol=lf
+
+# Docker files
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+.dockerignore text eol=lf
+
+# Binary files (don't convert)
+*.db binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+
+# ESPHome
+*.esphome binary

@@ -1,0 +1,32 @@
+{
+    "name": "Smart Home Skill Engine",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "postCreateCommand": "bash scripts/install-tools.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "ms-vscode-remote.remote-containers",
+                "file-icons.file-icons"
+            ]
+        }
+    },
+    "forwardPorts": [8123, 8080, 6052],
+    "portsAttributes": {
+        "8123": {
+            "label": "Home Assistant",
+            "onAutoForward": "notify"
+        },
+        "8080": {
+            "label": "OpenClaw",
+            "onAutoForward": "notify"
+        },
+        "6052": {
+            "label": "ESPHome",
+            "onAutoForward": "notify"
+        }
+    }
+}

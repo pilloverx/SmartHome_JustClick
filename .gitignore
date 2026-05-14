@@ -1,0 +1,84 @@
+# Home Assistant secrets and sensitive data
+homeassistant/secrets.yaml
+homeassistant/known_devices.yaml
+homeassistant/.cloud/
+homeassistant/.storage/
+homeassistant/.cache/
+
+# Home Assistant database and logs
+homeassistant/home-assistant.log*
+homeassistant/home-assistant_v2.db*
+homeassistant/home-assistant_v2.db-journal
+REPO-DISPLAY.md
+
+# Home Assistant state files (temporary, not user config)
+homeassistant/state.* 
+
+# ESPHome build artifacts
+esphome/.esphome/
+esphome/build/
+
+# Python and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Docker artifacts
+.dockerignore
+docker-compose.override.yml
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+tmp/
+
+# Git files
+.git/
+
+# Node dependencies (if using web UI tools)
+node_modules/
+npm-debug.log
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Project-specific exclusions
+openclaw-skills/*/output/
+openclaw-skills/*/backup/
+docs/CLAWHUB-REFERENCE.md  # Generated from original files
+llama.cpp/
+setup-auth.sh
+bash.sh
+note.txt

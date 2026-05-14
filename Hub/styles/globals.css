@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Home Assistant & ESPHome Inspired Theme === */
+
+* {
+  @apply transition-colors;
+}
+
+html {
+  @apply scroll-smooth;
+}
+
+/* Light mode (default) */
+:root {
+  color-scheme: light;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* Main background */
+@layer base {
+  body {
+    @apply bg-white text-gray-900 dark:text-gray-100;
+  }
+
+  a,
+  button,
+  [role='button'],
+  input[type='button'],
+  input[type='submit'] {
+    @apply cursor-pointer;
+  }
+
+  button:disabled,
+  input:disabled {
+    @apply cursor-not-allowed;
+  }
+
+  /* Typography */
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-bold;
+  }
+
+  p {
+    @apply text-base leading-relaxed;
+  }
+
+  code {
+    @apply font-mono text-sm bg-gray-100 dark:bg-ha-surface-dark px-2 py-1 rounded;
+  }
+}
+
+/* Dark-mode global background override (use exact hex requested) */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #D01933;
+  }
+}
+
+.dark body {
+  background-color: #D01933;
+}
+
+/* Cards with HA-style shadow */
+@layer components {
+  .card-ha {
+    @apply rounded-lg bg-white dark:bg-ha-primary/10 border border-ha-border dark:border-ha-border-dark shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .card-esp {
+    @apply rounded-lg bg-gradient-esp/10 border border-esp-primary/20 dark:border-esp-primary/40;
+  }
+
+  /* Buttons */
+  .btn-ha {
+    @apply px-4 py-2 rounded-lg bg-ha-primary hover:bg-ha-primary-dark text-white font-medium transition-colors;
+  }
+
+  .btn-ha-outline {
+    @apply px-4 py-2 rounded-lg bg-transparent border-2 border-ha-primary text-ha-primary hover:bg-ha-primary/10;
+  }
+
+  .btn-esp {
+    @apply px-4 py-2 rounded-lg bg-esp-primary hover:bg-esp-primary-dark text-white font-medium transition-colors;
+  }
+
+  /* Badge with device status */
+  .badge-status {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-online {
+    @apply badge-status bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+  }
+
+  .badge-offline {
+    @apply badge-status bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+  }
+
+  /* Glassmorphism effect */
+  .glass {
+    @apply bg-white/30 backdrop-blur-md border border-white/20 dark:bg-gray-900/30 dark:border-gray-700/30;
+  }
+
+  /* Code block styling */
+  .code-block {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto font-mono text-sm;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-ha-primary/10;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-600 rounded-full hover:bg-gray-500 dark:hover:bg-gray-500;
+}
+
+/* Selection color */
+::selection {
+  @apply bg-ha-primary text-white;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
